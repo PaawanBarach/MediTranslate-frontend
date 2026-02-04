@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Mic, Send, Square } from 'lucide-react';
+import { Mic, Send, Square, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function ChatInput({ conversationId, role, sourceLang, targetLang, onMessageSent }) {
@@ -13,6 +13,7 @@ export default function ChatInput({ conversationId, role, sourceLang, targetLang
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const timerRef = useRef(null);
+  const fileInputRef = useRef(null);
   const { toast } = useToast();
 
   const sendTextMessage = async () => {
@@ -93,6 +94,38 @@ export default function ChatInput({ conversationId, role, sourceLang, targetLang
     }
   };
 
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check if it's an audio file
+    if (!file.type.startsWith('audio/')) {
+      toast({
+        title: 'Invalid File',
+        description: 'Please select an audio file',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: 'File Too Large',
+        description: 'Audio file must be less than 10MB',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Convert to blob and send
+    const audioBlob = new Blob([await file.arrayBuffer()], { type: file.type });
+    await sendAudioMessage(audioBlob, 0);
+
+    // Reset file input
+    event.target.value = '';
+  };
+
   const sendAudioMessage = async (audioBlob, duration) => {
     if (!conversationId) return;
 
@@ -100,7 +133,15 @@ export default function ChatInput({ conversationId, role, sourceLang, targetLang
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
+      
+      // Determine file extension based on blob type
+      let filename = 'recording.webm';
+      if (audioBlob.type.includes('mp3')) filename = 'audio.mp3';
+      else if (audioBlob.type.includes('wav')) filename = 'audio.wav';
+      else if (audioBlob.type.includes('m4a')) filename = 'audio.m4a';
+      else if (audioBlob.type.includes('ogg')) filename = 'audio.ogg';
+      
+      formData.append('audio', audioBlob, filename);
       formData.append('role', role);
       formData.append('source_lang', sourceLang);
       formData.append('target_lang', targetLang);
@@ -110,19 +151,23 @@ export default function ChatInput({ conversationId, role, sourceLang, targetLang
         body: formData
       });
 
-      if (!response.ok) throw new Error('Failed to process audio');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to process audio');
+      }
 
       const message = await response.json();
       onMessageSent(message);
       
       toast({
-        title: 'Audio sent',
-        description: `Recording (${duration}s) processed successfully`
+        title: 'Audio processed',
+        description: duration > 0 ? `Recording (${duration}s) sent successfully` : 'Audio file uploaded successfully'
       });
     } catch (error) {
+      console.error('Audio processing error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to send audio message',
+        description: error.message || 'Failed to send audio message',
         variant: 'destructive'
       });
     } finally {
@@ -148,11 +193,31 @@ export default function ChatInput({ conversationId, role, sourceLang, targetLang
         />
         
         <div className="flex gap-2">
+          {/* File Upload Button */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="audio/*"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isSending || isRecording || !conversationId}
+            title="Upload audio file"
+          >
+            <Upload className="w-4 h-4" />
+          </Button>
+
+          {/* Record Button */}
           <Button
             size="icon"
             variant={isRecording ? 'destructive' : 'outline'}
             onMouseDown={isRecording ? stopRecording : startRecording}
             disabled={isSending || !conversationId}
+            title="Record audio"
           >
             {isRecording ? (
               <Square className="w-4 h-4" />
@@ -161,10 +226,12 @@ export default function ChatInput({ conversationId, role, sourceLang, targetLang
             )}
           </Button>
 
+          {/* Send Button */}
           <Button
             size="icon"
             onClick={sendTextMessage}
             disabled={!text.trim() || isSending || !conversationId}
+            title="Send text message"
           >
             <Send className="w-4 h-4" />
           </Button>
@@ -172,14 +239,16 @@ export default function ChatInput({ conversationId, role, sourceLang, targetLang
       </div>
 
       {isRecording && (
-        <div className="text-sm text-red-500 mt-2 text-center">
+        <div className="text-sm text-red-500 mt-2 text-center flex items-center justify-center gap-2">
+          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
           Recording... {recordingTime}s
         </div>
       )}
 
       {isSending && (
-        <div className="text-sm text-blue-500 mt-2 text-center">
-          Processing...
+        <div className="text-sm text-blue-500 mt-2 text-center flex items-center justify-center gap-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+          Processing audio...
         </div>
       )}
     </div>
