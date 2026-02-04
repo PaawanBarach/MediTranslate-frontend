@@ -1,16 +1,89 @@
-# React + Vite
+# MediTranslate - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Real-time healthcare translation app connecting doctors and patients across language barriers. Built with React + Vite for Nao Medical's take-home assignment.
 
-Currently, two official plugins are available:
+## 🚀 [Live Demo](https://medi-translate-rosy.vercel.app)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+> **Note:** First load may take 30-60s as the backend wakes from sleep (free tier).
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 📸 Screenshots
 
-## Expanding the ESLint configuration
+### Desktop View
+![Chat Interface](./src/assets/Screenshots/full chat.png)
+*Doctor-Patient conversation with real-time translation*
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Mobile View
+<p float="left">
+  <img src="./src/assets/Screenshots/medi-translate-rosy.vercel.app_(Samsung Galaxy S20 Ultra).png" width="250" />
+</p>
+
+### Key Features Demo
+![Audio Recording](./src/assets/Screenshots/audio%20recording.png)
+*Recording and transcribing audio with visual feedback*
+
+![Search & Summary](./src/assets/Screenshots/summary.png)
+*Searching conversations and generating AI medical summaries*
+
+---
+
+## ✨ Features
+
+- 🌍 **15+ Languages** - Real-time bidirectional translation
+- 🎤 **Audio Recording** - Browser-based recording with automatic transcription
+- 💬 **Text Chat** - Clean, role-based messaging interface
+- 🔍 **Search** - Keyword search across all conversations with highlighting
+- 📋 **AI Summaries** - Medical summaries with symptoms, diagnoses, follow-ups
+- 📱 **Mobile Responsive** - Full functionality on phones and tablets
+- 🎨 **Modern UI** - Built with shadcn/ui components
+
+---
+
+## 🛠️ Tech Stack
+
+- **React 18** + Vite
+- **Tailwind CSS** + shadcn/ui
+- **Supabase** (PostgreSQL + Storage)
+- **lucide-react** icons
+- **jsPDF** for exports
+
+---
+
+## 🚀 Quick Start
+
+```bash
+npm install
+cp .env.example .env
+# Add your API keys to .env
+npm run dev
+📖 Detailed setup instructions: See SETUP.md
+
+📦 Environment Variables
+text
+VITE_API_URL=https://meditranslate-backend.onrender.com
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+🏗️ Project Structure
+text
+src/
+├── components/
+│   ├── Chat/
+│   │   ├── ChatInterface.jsx    # Main chat component
+│   │   ├── ChatInput.jsx         # Text + audio input
+│   │   └── MessageBubble.jsx     # Message display
+│   ├── Sidebar/
+│   │   └── ConversationList.jsx  # Search + list
+│   └── ui/                       # shadcn components
+├── App.jsx
+└── main.jsx
+
+🔗 Related
+Backend Repository: (https://github.com/PaawanBarach/MediTranslate-backend)
+
+API Documentation: Backend API Docs
+
+👤 Author
+[Paawan Barach]
+
+GitHub: @PaawanBarach
