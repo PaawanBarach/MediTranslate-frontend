@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Plus, User, Trash2, Search, X } from 'lucide-react';
 
@@ -15,7 +14,7 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
   const [newConvData, setNewConvData] = useState({
     patientName: '',
     doctorLang: 'English',
-    patientLang: 'Spanish'
+    patientLang: 'French'
   });
 
   const languages = [
@@ -123,7 +122,7 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
       setNewConvData({
         patientName: '',
         doctorLang: 'English',
-        patientLang: 'Spanish'
+        patientLang: 'French'
       });
       setShowNewDialog(false);
       setIsMobileOpen(false);
@@ -154,31 +153,32 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
   };
 
   return (
-    <div className={`w-80 border-r bg-gray-50 flex flex-col h-screen ${
-      isMobileOpen ? 'fixed inset-0 z-50 lg:relative' : 'hidden lg:flex'
+    <div className={`w-full lg:w-80 border-r bg-gray-50 flex flex-col overflow-hidden ${
+      isMobileOpen ? 'fixed inset-0 z-50' : 'hidden lg:flex'
     }`}>
-      <div className="p-4 border-b bg-white shrink-0">
+      {/* Header - Fixed */}
+      <div className="flex-shrink-0 p-3 lg:p-4 border-b bg-white">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-lg">Conversations</h2>
+          <h2 className="font-bold text-base lg:text-lg">Conversations</h2>
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden"
+            className="lg:hidden h-8 w-8"
             onClick={() => setIsMobileOpen(false)}
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </Button>
         </div>
 
         {/* Search Bar */}
         <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           <input
             type="text"
             placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+            className="w-full pl-9 pr-9 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
           />
           {searching && (
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -187,39 +187,35 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
           )}
         </div>
 
-        <Button onClick={() => setShowNewDialog(true)} className="w-full">
+        <Button onClick={() => setShowNewDialog(true)} className="w-full text-sm" size="sm">
           <Plus className="w-4 h-4 mr-2" />
           New Conversation
         </Button>
       </div>
 
-      {/* New Conversation Dialog */}
+      {/* New Conversation Dialog - Fixed */}
       {showNewDialog && (
-        <div className="p-4 bg-white border-b shrink-0">
-          <h3 className="font-semibold mb-3">New Conversation</h3>
+        <div className="flex-shrink-0 p-3 lg:p-4 bg-white border-b max-h-[50vh] overflow-y-auto">
+          <h3 className="font-semibold mb-3 text-sm">New Conversation</h3>
           
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Patient Name
-              </label>
+              <label className="block text-xs font-medium mb-1">Patient Name</label>
               <input
                 type="text"
                 value={newConvData.patientName}
                 onChange={(e) => setNewConvData({ ...newConvData, patientName: e.target.value })}
                 placeholder="Enter patient name"
-                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Doctor's Language
-              </label>
+              <label className="block text-xs font-medium mb-1">Doctor's Language</label>
               <select
                 value={newConvData.doctorLang}
                 onChange={(e) => setNewConvData({ ...newConvData, doctorLang: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
               >
                 {languages.map(lang => (
                   <option key={lang} value={lang}>{lang}</option>
@@ -228,13 +224,11 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Patient's Language
-              </label>
+              <label className="block text-xs font-medium mb-1">Patient's Language</label>
               <select
                 value={newConvData.patientLang}
                 onChange={(e) => setNewConvData({ ...newConvData, patientLang: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
               >
                 {languages.map(lang => (
                   <option key={lang} value={lang}>{lang}</option>
@@ -242,8 +236,8 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
               </select>
             </div>
 
-            <div className="flex gap-2">
-              <Button onClick={createNewConversation} className="flex-1">
+            <div className="flex gap-2 pt-2">
+              <Button onClick={createNewConversation} className="flex-1 text-sm" size="sm">
                 Create
               </Button>
               <Button 
@@ -252,11 +246,12 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
                   setNewConvData({
                     patientName: '',
                     doctorLang: 'English',
-                    patientLang: 'Spanish'
+                    patientLang: 'French'
                   });
                 }} 
                 variant="outline"
-                className="flex-1"
+                className="flex-1 text-sm"
+                size="sm"
               >
                 Cancel
               </Button>
@@ -265,7 +260,8 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
         </div>
       )}
 
-      <ScrollArea className="flex-1">
+      {/* Scrollable List Area */}
+      <div className="flex-1 overflow-y-auto">
         {/* Search Results */}
         {searchResults.length > 0 && (
           <div className="p-2">
@@ -279,9 +275,9 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
                 className="p-3 mb-2 cursor-pointer hover:bg-blue-50 transition"
               >
                 <div className="flex items-start gap-2">
-                  <User className="w-4 h-4 mt-1 text-gray-400" />
+                  <User className="w-4 h-4 mt-1 text-gray-400 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm">{result.patient_name}</div>
+                    <div className="font-semibold text-sm truncate">{result.patient_name}</div>
                     <Badge variant="outline" className="text-xs mb-1">
                       {result.role}
                     </Badge>
@@ -307,7 +303,7 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
                 <p className="mt-2 text-sm">Loading...</p>
               </div>
             ) : conversations.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
+              <div className="p-4 text-center text-gray-500 text-sm">
                 No conversations yet.<br/>Click "New Conversation" to start.
               </div>
             ) : (
@@ -323,24 +319,23 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
                       selectedId === conv.id ? 'bg-blue-100 border-blue-500' : ''
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white flex-shrink-0">
-                        <User className="w-5 h-5" />
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-blue-500 flex items-center justify-center text-white flex-shrink-0">
+                        <User className="w-4 h-4 lg:w-5 lg:h-5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-semibold truncate">{conv.patient_name}</div>
-                        <div className="text-xs text-gray-500">
+                        <div className="font-semibold text-sm truncate">{conv.patient_name}</div>
+                        <div className="text-xs text-gray-500 truncate">
                           {conv.doctor_lang} ↔ {conv.patient_lang}
                         </div>
                         <div className="text-xs text-gray-400">
                           {new Date(conv.created_at).toLocaleDateString()}
                         </div>
                       </div>
-                      {/* Delete button - Always visible on mobile, hover on desktop */}
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity h-8 w-8 shrink-0"
+                        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity h-7 w-7 flex-shrink-0"
                         onClick={(e) => deleteConversation(conv.id, e)}
                       >
                         <Trash2 className="w-4 h-4 text-red-500" />
@@ -352,7 +347,7 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
             )}
           </>
         )}
-      </ScrollArea>
+      </div>
     </div>
   );
 }
