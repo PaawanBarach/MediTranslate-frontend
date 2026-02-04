@@ -1,17 +1,17 @@
-import { useState, useRef, useCallback } from 'react';
-import { Mic, Square, Loader2 } from 'lucide-react';
+import { useState, useRef, useCallback } from "react";
+import { Mic, Square, Loader2 } from "lucide-react";
 
-export default function AudioRecorder({ 
-  onAudioComplete, 
+export default function AudioRecorder({
+  onAudioComplete,
   sourceLanguage,
   targetLanguage,
-  disabled = false 
+  disabled = false,
 }) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [waveformData, setWaveformData] = useState([]);
-  
+
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const audioContextRef = useRef(null);
@@ -22,15 +22,17 @@ export default function AudioRecorder({
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-      
+      mediaRecorderRef.current.stream
+        .getTracks()
+        .forEach((track) => track.stop());
+
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
-      
+
       // Fix: Only close if not already closed
       if (audioContextRef.current) {
-        if (audioContextRef.current.state !== 'closed') {
+        if (audioContextRef.current.state !== "closed") {
           audioContextRef.current.close().catch(() => {
             // Ignore errors
           });
@@ -39,7 +41,7 @@ export default function AudioRecorder({
       }
 
       clearInterval(timerRef.current);
-      
+
       setIsRecording(false);
       setWaveformData([]);
     }
@@ -51,97 +53,112 @@ export default function AudioRecorder({
     const bufferLength = analyserRef.current.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
     analyserRef.current.getByteFrequencyData(dataArray);
-    
-    const normalized = Array.from(dataArray).slice(0, 20).map(val => val / 255);
+
+    const normalized = Array.from(dataArray)
+      .slice(0, 20)
+      .map((val) => val / 255);
     setWaveformData(normalized);
-    
+
     animationFrameRef.current = requestAnimationFrame(updateWaveform);
   }, []);
 
-  const setupAudioVisualization = useCallback((stream) => {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const analyser = audioContext.createAnalyser();
-    const source = audioContext.createMediaStreamSource(stream);
-    
-    analyser.fftSize = 64;
-    source.connect(analyser);
-    
-    audioContextRef.current = audioContext;
-    analyserRef.current = analyser;
-    
-    updateWaveform();
-  }, [updateWaveform]);
+  const setupAudioVisualization = useCallback(
+    (stream) => {
+      const audioContext = new (
+        window.AudioContext || window.webkitAudioContext
+      )();
+      const analyser = audioContext.createAnalyser();
+      const source = audioContext.createMediaStreamSource(stream);
 
-  const processAudio = useCallback(async (audioBlob) => {
-    setIsProcessing(true);
+      analyser.fftSize = 64;
+      source.connect(analyser);
 
-    try {
-      // Use environment variable for API URL
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      
-      console.log('Processing audio with Groq Whisper...', {
-        blobSize: audioBlob.size,
-        duration: recordingTime,
-        apiUrl: apiUrl
-      });
-      
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
-      formData.append('conversation_id', 'temp-conversation');
-      formData.append('sender_role', 'doctor');
-      formData.append('source_lang', sourceLanguage);
-      formData.append('target_lang', targetLanguage);
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
 
-      const response = await fetch(`${apiUrl}/api/audio/process`, {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`API error: ${JSON.stringify(errorData)}`);
+      updateWaveform();
+    },
+    [updateWaveform],
+  );
+
+  const processAudio = useCallback(
+    async (audioBlob) => {
+      setIsProcessing(true);
+
+      try {
+        // Use environment variable for API URL
+        console.log("ALL ENV VARS:", import.meta.env);
+        console.log("VITE_API_URL:", import.meta.env.VITE_API_URL);
+        console.log("Mode:", import.meta.env.MODE);
+
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+        console.log("Using API URL:", apiUrl);
+
+        console.log("Processing audio with Groq Whisper...", {
+          blobSize: audioBlob.size,
+          duration: recordingTime,
+          apiUrl: apiUrl,
+        });
+
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "recording.webm");
+        formData.append("conversation_id", "temp-conversation");
+        formData.append("sender_role", "doctor");
+        formData.append("source_lang", sourceLanguage);
+        formData.append("target_lang", targetLanguage);
+
+        const response = await fetch(`${apiUrl}/api/audio/process`, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`API error: ${JSON.stringify(errorData)}`);
+        }
+
+        const data = await response.json();
+        console.log("Audio processed successfully:", data);
+
+        onAudioComplete({
+          audioUrl: data.audio_url,
+          transcript: data.transcript,
+          translation: data.translation,
+          duration: recordingTime,
+        });
+      } catch (error) {
+        console.error("Error processing audio:", error);
+
+        if (error.message.includes("Failed to fetch")) {
+          alert("Cannot connect to backend. Check your internet connection.");
+        } else {
+          alert(`Error processing audio: ${error.message}`);
+        }
+      } finally {
+        setIsProcessing(false);
       }
-      
-      const data = await response.json();
-      console.log('Audio processed successfully:', data);
-
-      onAudioComplete({
-        audioUrl: data.audio_url,
-        transcript: data.transcript,
-        translation: data.translation,
-        duration: recordingTime
-      });
-
-    } catch (error) {
-      console.error('Error processing audio:', error);
-      
-      if (error.message.includes('Failed to fetch')) {
-        alert('Cannot connect to backend. Check your internet connection.');
-      } else {
-        alert(`Error processing audio: ${error.message}`);
-      }
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [sourceLanguage, targetLanguage, onAudioComplete, recordingTime]);
+    },
+    [sourceLanguage, targetLanguage, onAudioComplete, recordingTime],
+  );
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 44100
-        } 
+          sampleRate: 44100,
+        },
       });
-      
-      console.log('Microphone access granted');
-      
+
+      console.log("Microphone access granted");
+
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
+        mimeType: "audio/webm;codecs=opus",
       });
-      
+
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -150,13 +167,15 @@ export default function AudioRecorder({
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        
-        console.log('Audio blob created:', {
-          size: audioBlob.size,
-          type: audioBlob.type
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
         });
-        
+
+        console.log("Audio blob created:", {
+          size: audioBlob.size,
+          type: audioBlob.type,
+        });
+
         await processAudio(audioBlob);
       };
 
@@ -166,18 +185,19 @@ export default function AudioRecorder({
       setIsRecording(true);
       setRecordingTime(0);
       timerRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
+        setRecordingTime((prev) => prev + 1);
       }, 1000);
-
     } catch (error) {
-      console.error('Error starting recording:', error);
-      
-      if (error.name === 'NotAllowedError') {
-        alert('Microphone access denied. Please allow microphone in browser settings.');
-      } else if (error.name === 'NotFoundError') {
-        alert('No microphone found. Please connect a microphone.');
+      console.error("Error starting recording:", error);
+
+      if (error.name === "NotAllowedError") {
+        alert(
+          "Microphone access denied. Please allow microphone in browser settings.",
+        );
+      } else if (error.name === "NotFoundError") {
+        alert("No microphone found. Please connect a microphone.");
       } else {
-        alert('Error accessing microphone: ' + error.message);
+        alert("Error accessing microphone: " + error.message);
       }
     }
   };
@@ -185,7 +205,7 @@ export default function AudioRecorder({
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -196,7 +216,7 @@ export default function AudioRecorder({
             <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
             Recording... {formatTime(recordingTime)}
           </div>
-          
+
           <div className="flex items-center gap-1 h-12">
             {waveformData.map((value, idx) => (
               <div
@@ -218,7 +238,9 @@ export default function AudioRecorder({
       ) : isProcessing ? (
         <div className="flex flex-col items-center gap-2 text-gray-600">
           <Loader2 className="animate-spin" size={24} />
-          <p className="text-sm">Processing audio... This may take up to 30 seconds</p>
+          <p className="text-sm">
+            Processing audio... This may take up to 30 seconds
+          </p>
         </div>
       ) : (
         <button
