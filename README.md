@@ -98,14 +98,6 @@ src/
 
 ---
 
-## 🤖 AI Tools Used
-
-- **ChatGPT/Claude** - Component architecture, debugging
-- **GitHub Copilot** - Code completion
-- **Groq API** - Translation (Llama 3.3 70B) + Transcription (Whisper Large v3)
-
----
-
 ## 📝 Key Technical Decisions
 
 **Why Vite over Next.js?**
@@ -125,8 +117,6 @@ src/
 - No offline mode (requires internet)
 - No multi-device sync (WebSocket not implemented)
 - Search is keyword-based (not fuzzy)
-- Audio recording only (no file upload)
-
 ---
 
 ## 🚀 Deployment
