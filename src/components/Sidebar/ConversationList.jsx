@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Plus, User, Trash2, Search, X, Menu } from 'lucide-react';
+import { Plus, User, Trash2, Search, X } from 'lucide-react';
 
 export default function ConversationList({ onSelectConversation, selectedId, isMobileOpen, setIsMobileOpen }) {
   const [conversations, setConversations] = useState([]);
@@ -126,7 +126,7 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
         patientLang: 'Spanish'
       });
       setShowNewDialog(false);
-      setIsMobileOpen(false); // Close sidebar on mobile after creating
+      setIsMobileOpen(false);
     } catch (error) {
       console.error('Failed to create conversation:', error);
       alert(`Failed to create conversation: ${error.message}`);
@@ -139,7 +139,7 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
       onSelectConversation(conv);
       setSearchQuery('');
       setSearchResults([]);
-      setIsMobileOpen(false); // Close on mobile
+      setIsMobileOpen(false);
     }
   };
 
@@ -157,7 +157,7 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
     <div className={`w-80 border-r bg-gray-50 flex flex-col h-screen ${
       isMobileOpen ? 'fixed inset-0 z-50 lg:relative' : 'hidden lg:flex'
     }`}>
-      <div className="p-4 border-b bg-white">
+      <div className="p-4 border-b bg-white shrink-0">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-bold text-lg">Conversations</h2>
           <Button
@@ -195,7 +195,7 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
 
       {/* New Conversation Dialog */}
       {showNewDialog && (
-        <div className="p-4 bg-white border-b">
+        <div className="p-4 bg-white border-b shrink-0">
           <h3 className="font-semibold mb-3">New Conversation</h3>
           
           <div className="space-y-3">
@@ -336,10 +336,11 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
                           {new Date(conv.created_at).toLocaleDateString()}
                         </div>
                       </div>
+                      {/* Delete button - Always visible on mobile, hover on desktop */}
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
+                        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity h-8 w-8 shrink-0"
                         onClick={(e) => deleteConversation(conv.id, e)}
                       >
                         <Trash2 className="w-4 h-4 text-red-500" />
