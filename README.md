@@ -8,22 +8,23 @@ Real-time healthcare translation app connecting doctors and patients across lang
 
 ---
 
-## 📸 Screenshots
-
+## 📸 Screenshots & Demo
+(./src/assets/Screenshots/Animation.gif)
 ### Desktop View
-![Chat Interface](./src/assets/Screenshots/full chat.png)
+![Chat Interface](./src/assets/Screenshots/full_chat.png)
 *Doctor-Patient conversation with real-time translation*
 
 ### Mobile View
 <p float="left">
-  <img src="./src/assets/Screenshots/medi-translate-rosy.vercel.app_(Samsung Galaxy S20 Ultra).png" width="250" />
+  <img src="./src/assets/Screenshots/mobile_chat.png" width="250" />
 </p>
 
 ### Key Features Demo
-![Audio Recording](./src/assets/Screenshots/audio%20recording.png)
+![Audio Recording Demo](./src/assets/Screenshots/audio recording.png)
 *Recording and transcribing audio with visual feedback*
 
 ![Search & Summary](./src/assets/Screenshots/summary.png)
+(./src/assets/Screenshots/search.png)
 *Searching conversations and generating AI medical summaries*
 
 ---
@@ -57,15 +58,25 @@ npm install
 cp .env.example .env
 # Add your API keys to .env
 npm run dev
-📖 Detailed setup instructions: See SETUP.md
+```
 
-📦 Environment Variables
-text
+📖 **Detailed setup instructions:** See [SETUP.md](./SETUP.md)
+
+---
+
+## 📦 Environment Variables
+
+```env
 VITE_API_URL=https://meditranslate-backend.onrender.com
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-🏗️ Project Structure
-text
+```
+
+---
+
+## 🏗️ Project Structure
+
+```
 src/
 ├── components/
 │   ├── Chat/
@@ -77,13 +88,70 @@ src/
 │   └── ui/                       # shadcn components
 ├── App.jsx
 └── main.jsx
+```
 
-🔗 Related
-Backend Repository: (https://github.com/PaawanBarach/MediTranslate-backend)
+---
 
-API Documentation: Backend API Docs
+## 🤖 AI Tools Used
 
-👤 Author
-[Paawan Barach]
+- **ChatGPT/Claude** - Component architecture, debugging
+- **GitHub Copilot** - Code completion
+- **Groq API** - Translation (Llama 3.3 70B) + Transcription (Whisper Large v3)
 
-GitHub: @PaawanBarach
+---
+
+## 📝 Key Technical Decisions
+
+**Why Vite over Next.js?**
+- Faster dev server for rapid iteration
+- Simpler deployment to Vercel
+- Smaller bundle size
+
+**Why shadcn/ui?**
+- Unstyled primitives = full customization
+- Copy-paste components = no dependency bloat
+- Tailwind integration
+
+---
+
+## ⚠️ Known Limitations
+
+- No offline mode (requires internet)
+- No multi-device sync (WebSocket not implemented)
+- Search is keyword-based (not fuzzy)
+- Audio recording only (no file upload)
+
+---
+
+## 🚀 Deployment
+
+**Vercel (Recommended)**
+```bash
+vercel --prod
+```
+
+**Manual Build**
+```bash
+npm run build
+# Deploy /dist folder to any static host
+```
+
+---
+
+## 🔗 Related
+
+- **Backend Repository:** [github.com/PaawanBarach/MediTranslate-backend](https://github.com/PaawanBarach/MediTranslate-backend)
+- **API Documentation:** [Backend API Docs](https://meditranslate-backend.onrender.com/docs)
+
+---
+
+## 👤 Author
+
+**Paawan Barach**
+- GitHub: [@PaawanBarach](https://github.com/PaawanBarach)
+
+---
+
+## 📄 License
+
+MIT - Built for Nao Medical take-home assignment (Feb 2026)
