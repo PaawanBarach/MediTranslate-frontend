@@ -161,13 +161,10 @@ export default function ChatInterface({ conversation, onConversationUpdate, setI
   };
 
   const scrollToBottom = () => {
-    if (scrollRef.current) {
-      const scrollElement = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollElement) {
-        scrollElement.scrollTop = scrollElement.scrollHeight;
-      }
-    }
-  };
+  if (scrollRef.current) {
+    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }
+};
 
   const sourceLang = currentRole === 'doctor' ? conversation?.doctor_lang : conversation?.patient_lang;
   const targetLang = currentRole === 'doctor' ? conversation?.patient_lang : conversation?.doctor_lang;
