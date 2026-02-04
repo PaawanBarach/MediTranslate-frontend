@@ -1,112 +1,30 @@
 import { useState } from 'react';
-import AudioRecorder from './components/AudioRecorder';
+import ConversationList from './components/Sidebar/ConversationList';
+import ChatInterface from './components/Chat/ChatInterface';
+import { Toaster } from './components/ui/toaster';
 
 function App() {
-  const [sourceLanguage, setSourceLanguage] = useState('English');
-  const [targetLanguage, setTargetLanguage] = useState('Spanish');
-  const [lastResult, setLastResult] = useState(null);
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const handleAudioComplete = (data) => {
-    console.log('Audio recorded:', data);
-    setLastResult(data);
+  const handleConversationUpdate = (updatedConv) => {
+    setSelectedConversation(updatedConv);
   };
 
-  // Debug info
-  const apiUrl = import.meta.env.VITE_API_URL || 'NOT SET';
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'NOT SET';
-  const mode = import.meta.env.MODE || 'unknown';
-
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-lg shadow-lg max-w-2xl w-full">
-        <h1 className="text-2xl font-bold mb-6 text-center">
-          MediTranslate - Audio Test
-        </h1>
-        
-        {/* DEBUG INFO - REMOVE BEFORE FINAL SUBMISSION */}
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs space-y-1">
-          <p className="font-bold text-yellow-800">🔍 Debug Info:</p>
-          <p>API URL: <code className="bg-yellow-100 px-1 py-0.5 rounded">{apiUrl}</code></p>
-          <p>Supabase: <code className="bg-yellow-100 px-1 py-0.5 rounded">{supabaseUrl.substring(0, 30)}...</code></p>
-          <p>Mode: <code className="bg-yellow-100 px-1 py-0.5 rounded">{mode}</code></p>
-        </div>
-        
-        {/* Language Selection */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Source Language
-            </label>
-            <select
-              value={sourceLanguage}
-              onChange={(e) => setSourceLanguage(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="English">English</option>
-              <option value="Spanish">Spanish</option>
-              <option value="French">French</option>
-              <option value="Hindi">Hindi</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Target Language
-            </label>
-            <select
-              value={targetLanguage}
-              onChange={(e) => setTargetLanguage(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="English">English</option>
-              <option value="Spanish">Spanish</option>
-              <option value="French">French</option>
-              <option value="Hindi">Hindi</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="mb-6 p-4 bg-blue-50 rounded-lg text-center">
-          <p className="text-sm text-gray-600">
-            Speaking: <strong>{sourceLanguage}</strong> → Translation: <strong>{targetLanguage}</strong>
-          </p>
-        </div>
-
-        {/* Audio Recorder */}
-        <AudioRecorder
-          onAudioComplete={handleAudioComplete}
-          sourceLanguage={sourceLanguage}
-          targetLanguage={targetLanguage}
-        />
-
-        {/* Results */}
-        {lastResult && (
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-semibold mb-3">Result:</h3>
-            
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm text-gray-600">Original:</p>
-                <p className="font-medium">{lastResult.transcript}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-gray-600">Translation:</p>
-                <p className="font-medium text-blue-600">{lastResult.translation}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-gray-600">Audio:</p>
-                <audio controls src={lastResult.audioUrl} className="w-full mt-2" />
-              </div>
-              
-              <div className="text-sm text-gray-500">
-                Duration: {lastResult.duration}s
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+    <div className="flex h-screen overflow-hidden">
+      <ConversationList
+        onSelectConversation={setSelectedConversation}
+        selectedId={selectedConversation?.id}
+        isMobileOpen={isMobileOpen}
+        setIsMobileOpen={setIsMobileOpen}
+      />
+      <ChatInterface 
+        conversation={selectedConversation}
+        onConversationUpdate={handleConversationUpdate}
+        setIsMobileOpen={setIsMobileOpen}
+      />
+      <Toaster />
     </div>
   );
 }
