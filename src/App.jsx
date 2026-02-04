@@ -6,11 +6,15 @@ function App() {
   const [targetLanguage, setTargetLanguage] = useState('Spanish');
   const [lastResult, setLastResult] = useState(null);
 
-  // This function handles the audio result
   const handleAudioComplete = (data) => {
     console.log('Audio recorded:', data);
     setLastResult(data);
   };
+
+  // Debug info
+  const apiUrl = import.meta.env.VITE_API_URL || 'NOT SET';
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'NOT SET';
+  const mode = import.meta.env.MODE || 'unknown';
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -18,6 +22,14 @@ function App() {
         <h1 className="text-2xl font-bold mb-6 text-center">
           MediTranslate - Audio Test
         </h1>
+        
+        {/* DEBUG INFO - REMOVE BEFORE FINAL SUBMISSION */}
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs space-y-1">
+          <p className="font-bold text-yellow-800">🔍 Debug Info:</p>
+          <p>API URL: <code className="bg-yellow-100 px-1 py-0.5 rounded">{apiUrl}</code></p>
+          <p>Supabase: <code className="bg-yellow-100 px-1 py-0.5 rounded">{supabaseUrl.substring(0, 30)}...</code></p>
+          <p>Mode: <code className="bg-yellow-100 px-1 py-0.5 rounded">{mode}</code></p>
+        </div>
         
         {/* Language Selection */}
         <div className="grid grid-cols-2 gap-4 mb-6">
