@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Mic, Square, Loader2 } from 'lucide-react';
 
 export default function AudioRecorder({ 
@@ -14,29 +14,28 @@ export default function AudioRecorder({
   
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-  const recognitionRef = useRef(null);
-  const transcriptRef = useRef('');
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const animationFrameRef = useRef(null);
   const timerRef = useRef(null);
 
-  // Memoize stopRecording to avoid dependency issues
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
-      
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-
       mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
       
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      
+      // Fix: Only close if not already closed
       if (audioContextRef.current) {
-        audioContextRef.current.close();
+        if (audioContextRef.current.state !== 'closed') {
+          audioContextRef.current.close().catch(() => {
+            // Ignore errors
+          });
+        }
+        audioContextRef.current = null;
       }
 
       clearInterval(timerRef.current);
@@ -45,31 +44,6 @@ export default function AudioRecorder({
       setWaveformData([]);
     }
   }, [isRecording]);
-
-  useEffect(() => {
-    // Initialize Web Speech API
-    // eslint-disable-next-line no-undef
-    if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
-      // eslint-disable-next-line no-undef
-      const recognition = new webkitSpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = false;
-      recognition.lang = sourceLanguage === 'English' ? 'en-US' : 'es-ES';
-      
-      recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map(result => result[0].transcript)
-          .join(' ');
-        transcriptRef.current = transcript;
-      };
-      
-      recognitionRef.current = recognition;
-    }
-
-    return () => {
-      stopRecording();
-    };
-  }, [sourceLanguage, stopRecording]);
 
   const updateWaveform = useCallback(() => {
     if (!analyserRef.current) return;
@@ -102,45 +76,50 @@ export default function AudioRecorder({
     setIsProcessing(true);
 
     try {
-      const transcript = transcriptRef.current || 'Audio message';
+      // Use environment variable for API URL
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       
-      // Upload audio to backend
+      console.log('Processing audio with Groq Whisper...', {
+        blobSize: audioBlob.size,
+        duration: recordingTime,
+        apiUrl: apiUrl
+      });
+      
       const formData = new FormData();
       formData.append('audio', audioBlob, 'recording.webm');
-      formData.append('conversation_id', 'temp-id');
+      formData.append('conversation_id', 'temp-conversation');
       formData.append('sender_role', 'doctor');
+      formData.append('source_lang', sourceLanguage);
+      formData.append('target_lang', targetLanguage);
 
-      const uploadResponse = await fetch('http://localhost:8000/api/audio/upload', {
+      const response = await fetch(`${apiUrl}/api/audio/process`, {
         method: 'POST',
         body: formData
       });
-      const uploadData = await uploadResponse.json();
-
-      // Translate transcript
-      const translateFormData = new FormData();
-      translateFormData.append('transcript', transcript);
-      translateFormData.append('source_lang', sourceLanguage);
-      translateFormData.append('target_lang', targetLanguage);
-
-      const translateResponse = await fetch('http://localhost:8000/api/audio/transcribe-translate', {
-        method: 'POST',
-        body: translateFormData
-      });
-      const translateData = await translateResponse.json();
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`API error: ${JSON.stringify(errorData)}`);
+      }
+      
+      const data = await response.json();
+      console.log('Audio processed successfully:', data);
 
       onAudioComplete({
-        audioUrl: uploadData.audio_url,
-        transcript: translateData.transcript,
-        translation: translateData.translation,
+        audioUrl: data.audio_url,
+        transcript: data.transcript,
+        translation: data.translation,
         duration: recordingTime
       });
 
-      // Reset transcript
-      transcriptRef.current = '';
-
     } catch (error) {
       console.error('Error processing audio:', error);
-      alert('Error processing audio. Please try again.');
+      
+      if (error.message.includes('Failed to fetch')) {
+        alert('Cannot connect to backend. Check your internet connection.');
+      } else {
+        alert(`Error processing audio: ${error.message}`);
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -148,9 +127,21 @@ export default function AudioRecorder({
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 44100
+        } 
+      });
       
-      const mediaRecorder = new MediaRecorder(stream);
+      console.log('Microphone access granted');
+      
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
+      
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -160,15 +151,16 @@ export default function AudioRecorder({
 
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        
+        console.log('Audio blob created:', {
+          size: audioBlob.size,
+          type: audioBlob.type
+        });
+        
         await processAudio(audioBlob);
       };
 
       mediaRecorder.start();
-
-      if (recognitionRef.current) {
-        recognitionRef.current.start();
-      }
-
       setupAudioVisualization(stream);
 
       setIsRecording(true);
@@ -179,7 +171,14 @@ export default function AudioRecorder({
 
     } catch (error) {
       console.error('Error starting recording:', error);
-      alert('Microphone access denied or not available');
+      
+      if (error.name === 'NotAllowedError') {
+        alert('Microphone access denied. Please allow microphone in browser settings.');
+      } else if (error.name === 'NotFoundError') {
+        alert('No microphone found. Please connect a microphone.');
+      } else {
+        alert('Error accessing microphone: ' + error.message);
+      }
     }
   };
 
@@ -217,9 +216,9 @@ export default function AudioRecorder({
           </button>
         </div>
       ) : isProcessing ? (
-        <div className="flex items-center gap-2 text-gray-600">
-          <Loader2 className="animate-spin" size={20} />
-          Processing audio...
+        <div className="flex flex-col items-center gap-2 text-gray-600">
+          <Loader2 className="animate-spin" size={24} />
+          <p className="text-sm">Processing audio... This may take up to 30 seconds</p>
         </div>
       ) : (
         <button
