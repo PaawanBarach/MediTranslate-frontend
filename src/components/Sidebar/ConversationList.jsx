@@ -153,201 +153,213 @@ export default function ConversationList({ onSelectConversation, selectedId, isM
   };
 
   return (
-    <div className={`w-full lg:w-80 border-r bg-gray-50 flex flex-col overflow-hidden ${
-      isMobileOpen ? 'fixed inset-0 z-50' : 'hidden lg:flex'
-    }`}>
-      {/* Header - Fixed */}
-      <div className="flex-shrink-0 p-3 lg:p-4 border-b bg-white">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-base lg:text-lg">Conversations</h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden h-8 w-8"
-            onClick={() => setIsMobileOpen(false)}
-          >
-            <X className="w-4 h-4" />
+    <>
+      {/* Mobile backdrop overlay */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        w-80 border-r bg-gray-50 flex flex-col h-screen
+        transition-transform duration-300 ease-in-out
+        lg:relative lg:translate-x-0
+        ${isMobileOpen ? 'fixed inset-y-0 left-0 z-50 translate-x-0' : 'fixed inset-y-0 left-0 z-50 -translate-x-full lg:flex'}
+      `}>
+        {/* Header - Fixed */}
+        <div className="flex-none p-3 lg:p-4 border-b bg-white">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-base lg:text-lg">Conversations</h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden h-8 w-8"
+              onClick={() => setIsMobileOpen(false)}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative mb-3">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search conversations..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-9 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+            />
+            {searching && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+              </div>
+            )}
+          </div>
+
+          <Button onClick={() => setShowNewDialog(true)} className="w-full text-sm" size="sm">
+            <Plus className="w-4 h-4 mr-2" />
+            New Conversation
           </Button>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Search conversations..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-9 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
-          />
-          {searching && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
-            </div>
-          )}
-        </div>
+        {/* New Conversation Dialog */}
+        {showNewDialog && (
+          <div className="flex-none p-3 lg:p-4 bg-white border-b max-h-[50vh] overflow-y-auto">
+            <h3 className="font-semibold mb-3 text-sm">New Conversation</h3>
+            
+            <div className="space-y-2">
+              <div>
+                <label className="block text-xs font-medium mb-1">Patient Name</label>
+                <input
+                  type="text"
+                  value={newConvData.patientName}
+                  onChange={(e) => setNewConvData({ ...newConvData, patientName: e.target.value })}
+                  placeholder="Enter patient name"
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+                />
+              </div>
 
-        <Button onClick={() => setShowNewDialog(true)} className="w-full text-sm" size="sm">
-          <Plus className="w-4 h-4 mr-2" />
-          New Conversation
-        </Button>
-      </div>
+              <div>
+                <label className="block text-xs font-medium mb-1">Doctor's Language</label>
+                <select
+                  value={newConvData.doctorLang}
+                  onChange={(e) => setNewConvData({ ...newConvData, doctorLang: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+                >
+                  {languages.map(lang => (
+                    <option key={lang} value={lang}>{lang}</option>
+                  ))}
+                </select>
+              </div>
 
-      {/* New Conversation Dialog - Fixed */}
-      {showNewDialog && (
-        <div className="flex-shrink-0 p-3 lg:p-4 bg-white border-b max-h-[50vh] overflow-y-auto">
-          <h3 className="font-semibold mb-3 text-sm">New Conversation</h3>
-          
-          <div className="space-y-2">
-            <div>
-              <label className="block text-xs font-medium mb-1">Patient Name</label>
-              <input
-                type="text"
-                value={newConvData.patientName}
-                onChange={(e) => setNewConvData({ ...newConvData, patientName: e.target.value })}
-                placeholder="Enter patient name"
-                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
-              />
-            </div>
+              <div>
+                <label className="block text-xs font-medium mb-1">Patient's Language</label>
+                <select
+                  value={newConvData.patientLang}
+                  onChange={(e) => setNewConvData({ ...newConvData, patientLang: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+                >
+                  {languages.map(lang => (
+                    <option key={lang} value={lang}>{lang}</option>
+                  ))}
+                </select>
+              </div>
 
-            <div>
-              <label className="block text-xs font-medium mb-1">Doctor's Language</label>
-              <select
-                value={newConvData.doctorLang}
-                onChange={(e) => setNewConvData({ ...newConvData, doctorLang: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
-              >
-                {languages.map(lang => (
-                  <option key={lang} value={lang}>{lang}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium mb-1">Patient's Language</label>
-              <select
-                value={newConvData.patientLang}
-                onChange={(e) => setNewConvData({ ...newConvData, patientLang: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
-              >
-                {languages.map(lang => (
-                  <option key={lang} value={lang}>{lang}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <Button onClick={createNewConversation} className="flex-1 text-sm" size="sm">
-                Create
-              </Button>
-              <Button 
-                onClick={() => {
-                  setShowNewDialog(false);
-                  setNewConvData({
-                    patientName: '',
-                    doctorLang: 'English',
-                    patientLang: 'French'
-                  });
-                }} 
-                variant="outline"
-                className="flex-1 text-sm"
-                size="sm"
-              >
-                Cancel
-              </Button>
+              <div className="flex gap-2 pt-2">
+                <Button onClick={createNewConversation} className="flex-1 text-sm" size="sm">
+                  Create
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setShowNewDialog(false);
+                    setNewConvData({
+                      patientName: '',
+                      doctorLang: 'English',
+                      patientLang: 'French'
+                    });
+                  }} 
+                  variant="outline"
+                  className="flex-1 text-sm"
+                  size="sm"
+                >
+                  Cancel
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Scrollable List Area */}
-      <div className="flex-1 overflow-y-auto">
-        {/* Search Results */}
-        {searchResults.length > 0 && (
-          <div className="p-2">
-            <div className="text-xs font-semibold text-gray-500 px-2 mb-2">
-              Search Results ({searchResults.length})
-            </div>
-            {searchResults.map((result) => (
-              <Card
-                key={result.message_id}
-                onClick={() => selectConversationFromSearch(result)}
-                className="p-3 mb-2 cursor-pointer hover:bg-blue-50 transition"
-              >
-                <div className="flex items-start gap-2">
-                  <User className="w-4 h-4 mt-1 text-gray-400 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm truncate">{result.patient_name}</div>
-                    <Badge variant="outline" className="text-xs mb-1">
-                      {result.role}
-                    </Badge>
-                    <p className="text-xs text-gray-600 line-clamp-2">
-                      {highlightText(result.context, searchQuery)}
-                    </p>
-                    <div className="text-xs text-gray-400 mt-1">
-                      {new Date(result.created_at).toLocaleDateString()}
+        {/* Scrollable List */}
+        <div className="flex-1 overflow-y-auto">
+          {searchResults.length > 0 && (
+            <div className="p-2">
+              <div className="text-xs font-semibold text-gray-500 px-2 mb-2">
+                Search Results ({searchResults.length})
+              </div>
+              {searchResults.map((result) => (
+                <Card
+                  key={result.message_id}
+                  onClick={() => selectConversationFromSearch(result)}
+                  className="p-3 mb-2 cursor-pointer hover:bg-blue-50 transition"
+                >
+                  <div className="flex items-start gap-2">
+                    <User className="w-4 h-4 mt-1 text-gray-400 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-sm truncate">{result.patient_name}</div>
+                      <Badge variant="outline" className="text-xs mb-1">
+                        {result.role}
+                      </Badge>
+                      <p className="text-xs text-gray-600 line-clamp-2">
+                        {highlightText(result.context, searchQuery)}
+                      </p>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {new Date(result.created_at).toLocaleDateString()}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
+                </Card>
+              ))}
+            </div>
+          )}
 
-        {/* Conversation List */}
-        {searchResults.length === 0 && (
-          <>
-            {loading ? (
-              <div className="p-4 text-center text-gray-500">
-                <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent mx-auto"></div>
-                <p className="mt-2 text-sm">Loading...</p>
-              </div>
-            ) : conversations.length === 0 ? (
-              <div className="p-4 text-center text-gray-500 text-sm">
-                No conversations yet.<br/>Click "New Conversation" to start.
-              </div>
-            ) : (
-              <div className="p-2 space-y-2">
-                {conversations.map((conv) => (
-                  <Card
-                    key={conv.id}
-                    onClick={() => {
-                      onSelectConversation(conv);
-                      setIsMobileOpen(false);
-                    }}
-                    className={`p-3 cursor-pointer hover:bg-blue-50 transition relative group ${
-                      selectedId === conv.id ? 'bg-blue-100 border-blue-500' : ''
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-blue-500 flex items-center justify-center text-white flex-shrink-0">
-                        <User className="w-4 h-4 lg:w-5 lg:h-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm truncate">{conv.patient_name}</div>
-                        <div className="text-xs text-gray-500 truncate">
-                          {conv.doctor_lang} ↔ {conv.patient_lang}
+          {searchResults.length === 0 && (
+            <>
+              {loading ? (
+                <div className="p-4 text-center text-gray-500">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent mx-auto"></div>
+                  <p className="mt-2 text-sm">Loading...</p>
+                </div>
+              ) : conversations.length === 0 ? (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  No conversations yet.<br/>Click "New Conversation" to start.
+                </div>
+              ) : (
+                <div className="p-2 space-y-2">
+                  {conversations.map((conv) => (
+                    <Card
+                      key={conv.id}
+                      onClick={() => {
+                        onSelectConversation(conv);
+                        setIsMobileOpen(false);
+                      }}
+                      className={`p-3 cursor-pointer hover:bg-blue-50 transition group ${
+                        selectedId === conv.id ? 'bg-blue-100 border-blue-500' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-blue-500 flex items-center justify-center text-white flex-shrink-0">
+                          <User className="w-4 h-4 lg:w-5 lg:h-5" />
                         </div>
-                        <div className="text-xs text-gray-400">
-                          {new Date(conv.created_at).toLocaleDateString()}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-sm truncate">{conv.patient_name}</div>
+                          <div className="text-xs text-gray-500 truncate">
+                            {conv.doctor_lang} ↔ {conv.patient_lang}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {new Date(conv.created_at).toLocaleDateString()}
+                          </div>
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity h-7 w-7 flex-shrink-0"
+                          onClick={(e) => deleteConversation(conv.id, e)}
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity h-7 w-7 flex-shrink-0"
-                        onClick={(e) => deleteConversation(conv.id, e)}
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </aside>
+    </>
   );
 }

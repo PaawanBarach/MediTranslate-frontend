@@ -161,10 +161,10 @@ export default function ChatInterface({ conversation, onConversationUpdate, setI
   };
 
   const scrollToBottom = () => {
-  if (scrollRef.current) {
-    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }
-};
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  };
 
   const sourceLang = currentRole === 'doctor' ? conversation?.doctor_lang : conversation?.patient_lang;
   const targetLang = currentRole === 'doctor' ? conversation?.patient_lang : conversation?.doctor_lang;
@@ -187,11 +187,10 @@ export default function ChatInterface({ conversation, onConversationUpdate, setI
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white overflow-hidden">
-      {/* Header - Fixed at top */}
-      <div className="flex-shrink-0 border-b bg-white">
+    <div className="flex-1 flex flex-col bg-white h-screen max-h-screen">
+      {/* Header - Fixed */}
+      <div className="flex-none border-b bg-white">
         <div className="p-2 lg:p-4">
-          {/* Mobile menu + patient info */}
           <div className="flex items-start gap-2 mb-2">
             <Button
               variant="ghost"
@@ -266,7 +265,6 @@ export default function ChatInterface({ conversation, onConversationUpdate, setI
             </div>
           </div>
 
-          {/* Role toggle */}
           <div className="flex gap-2 mb-2">
             <Button
               variant={currentRole === 'doctor' ? 'default' : 'outline'}
@@ -288,7 +286,6 @@ export default function ChatInterface({ conversation, onConversationUpdate, setI
             </Button>
           </div>
 
-          {/* Role indicator */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-blue-50 px-2 py-1.5 rounded-lg gap-1">
             <div className="flex items-center gap-2">
               {currentRole === 'doctor' ? (
@@ -310,111 +307,109 @@ export default function ChatInterface({ conversation, onConversationUpdate, setI
         </div>
       </div>
 
-      {/* Tabs area - Takes remaining space */}
-      <div className="flex-1 flex flex-col min-h-0">
-        <Tabs defaultValue="chat" className="flex-1 flex flex-col">
-          <TabsList className="mx-2 lg:mx-4 mt-2 flex-shrink-0">
-            <TabsTrigger value="chat" className="text-xs lg:text-sm">Chat</TabsTrigger>
-            <TabsTrigger value="summary" className="text-xs lg:text-sm">Summary</TabsTrigger>
-          </TabsList>
+      {/* Content Area - Flex grow */}
+      <Tabs defaultValue="chat" className="flex-1 flex flex-col min-h-0">
+        <TabsList className="mx-2 lg:mx-4 mt-2 flex-none">
+          <TabsTrigger value="chat" className="text-xs lg:text-sm">Chat</TabsTrigger>
+          <TabsTrigger value="summary" className="text-xs lg:text-sm">Summary</TabsTrigger>
+        </TabsList>
 
-          {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 flex flex-col m-0 p-0 data-[state=active]:flex">
-            {/* Messages area - Scrollable */}
-            <div className="flex-1 overflow-y-auto p-2 lg:p-4" ref={scrollRef}>
-              {loadingMessages ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="flex gap-3 animate-pulse">
-                      <div className="w-10 h-10 bg-gray-200 rounded-full flex-shrink-0"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                      </div>
+        {/* Chat Tab */}
+        <TabsContent value="chat" className="flex-1 flex flex-col min-h-0 mt-2 mx-2 lg:mx-4 data-[state=inactive]:hidden">
+          {/* Messages - Scrollable */}
+          <div className="flex-1 overflow-y-auto mb-2" ref={scrollRef}>
+            {loadingMessages ? (
+              <div className="space-y-4 p-2">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="flex gap-3 animate-pulse">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full flex-shrink-0"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
                     </div>
-                  ))}
-                </div>
-              ) : messages.length === 0 ? (
-                <div className="text-center text-gray-500 mt-8 text-sm">
-                  No messages yet. Start the conversation!
-                </div>
-              ) : (
-                messages.map((message) => (
-                  <MessageBubble
-                    key={message.id}
-                    message={message}
-                    currentRole={currentRole}
-                  />
-                ))
-              )}
-            </div>
+                  </div>
+                ))}
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="text-center text-gray-500 mt-8 text-sm">
+                No messages yet. Start the conversation!
+              </div>
+            ) : (
+              messages.map((message) => (
+                <MessageBubble
+                  key={message.id}
+                  message={message}
+                  currentRole={currentRole}
+                />
+              ))
+            )}
+          </div>
 
-            {/* Input area - Fixed at bottom */}
-            <div className="flex-shrink-0 border-t">
-              <ChatInput
-                conversationId={conversation.id}
-                role={currentRole}
-                sourceLang={sourceLang}
-                targetLang={targetLang}
-                onMessageSent={handleMessageSent}
-              />
-            </div>
-          </TabsContent>
+          {/* Input - Fixed at bottom */}
+          <div className="flex-none">
+            <ChatInput
+              conversationId={conversation.id}
+              role={currentRole}
+              sourceLang={sourceLang}
+              targetLang={targetLang}
+              onMessageSent={handleMessageSent}
+            />
+          </div>
+        </TabsContent>
 
-          {/* Summary Tab */}
-          <TabsContent value="summary" className="flex-1 overflow-y-auto p-2 lg:p-4 m-0 data-[state=active]:block">
-            <div className="max-w-2xl mx-auto">
-              <div className="flex flex-col sm:flex-row gap-2 mb-4">
+        {/* Summary Tab */}
+        <TabsContent value="summary" className="flex-1 overflow-y-auto p-2 lg:p-4 data-[state=inactive]:hidden">
+          <div className="max-w-2xl mx-auto">
+            <div className="flex flex-col sm:flex-row gap-2 mb-4">
+              <Button
+                onClick={generateSummary}
+                disabled={loadingSummary || messages.length === 0}
+                className="flex-1 text-sm"
+                size="sm"
+              >
+                {loadingSummary ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Generate Summary
+                  </>
+                )}
+              </Button>
+              
+              {summary && (
                 <Button
-                  onClick={generateSummary}
-                  disabled={loadingSummary || messages.length === 0}
-                  className="flex-1 text-sm"
+                  onClick={exportSummaryAsPDF}
+                  variant="outline"
+                  className="flex-1 sm:flex-none text-sm"
                   size="sm"
                 >
-                  {loadingSummary ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Generate Summary
-                    </>
-                  )}
+                  <Download className="w-4 h-4 mr-2" />
+                  Export PDF
                 </Button>
-                
-                {summary && (
-                  <Button
-                    onClick={exportSummaryAsPDF}
-                    variant="outline"
-                    className="flex-1 sm:flex-none text-sm"
-                    size="sm"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Export PDF
-                  </Button>
-                )}
-              </div>
-
-              {summary && (
-                <Card className="p-4 lg:p-6">
-                  <h3 className="font-bold text-base lg:text-lg mb-4">Medical Summary</h3>
-                  <div className="prose prose-sm max-w-none whitespace-pre-wrap text-sm">
-                    {summary}
-                  </div>
-                </Card>
-              )}
-
-              {!summary && !loadingSummary && (
-                <div className="text-center text-gray-500 mt-8 text-sm">
-                  Click "Generate Summary" to create an AI-powered medical summary.
-                </div>
               )}
             </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+
+            {summary && (
+              <Card className="p-4 lg:p-6">
+                <h3 className="font-bold text-base lg:text-lg mb-4">Medical Summary</h3>
+                <div className="prose prose-sm max-w-none whitespace-pre-wrap text-sm">
+                  {summary}
+                </div>
+              </Card>
+            )}
+
+            {!summary && !loadingSummary && (
+              <div className="text-center text-gray-500 mt-8 text-sm">
+                Click "Generate Summary" to create an AI-powered medical summary.
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
