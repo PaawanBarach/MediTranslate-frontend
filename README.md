@@ -9,23 +9,29 @@ Real-time healthcare translation app connecting doctors and patients across lang
 ---
 
 ## 📸 Screenshots & Demo
-(./src/assets/Screenshots/Animation.gif)
+
+### Key Features Demo
+![Text Recording Demo](./src/assets/Screenshots/Animation.gif)
+*Recording and transcribing text with visual feedback*
+
 ### Desktop View
-![Chat Interface](./src/assets/Screenshots/full_chat.png)
+![Full Chat Interface](./src/assets/Screenshots/full%20chat.png)
 *Doctor-Patient conversation with real-time translation*
+
+![Patient View](./src/assets/Screenshots/patient%20view.png)
+*Patient's perspective of the conversation*
 
 ### Mobile View
 <p float="left">
-  <img src="./src/assets/Screenshots/mobile_chat.png" width="250" />
+  <img src="./src/assets/Screenshots/medi-translate-rosy.vercel.app_(Samsung%20Galaxy%20S20%20Ultra).png" width="250" />
 </p>
 
-### Key Features Demo
-![Audio Recording Demo](./src/assets/Screenshots/audio recording.png)
-*Recording and transcribing audio with visual feedback*
+### Search & AI Summary
+![Search Feature](./src/assets/Screenshots/search.png)
+*Keyword search across all conversations*
 
-![Search & Summary](./src/assets/Screenshots/summary.png)
-(./src/assets/Screenshots/search.png)
-*Searching conversations and generating AI medical summaries*
+![AI Medical Summary](./src/assets/Screenshots/summary.png)
+*AI-powered medical summaries with symptoms, diagnoses, and follow-ups*
 
 ---
 
