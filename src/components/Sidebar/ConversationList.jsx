@@ -3,8 +3,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, User, Trash2, Search, X } from "lucide-react";
+import RoomManager from "../RoomManager";
 
 export default function ConversationList({
+  roomCode,
+  tokenData,
+  onRoomChange,
   onSelectConversation,
   selectedId,
   isMobileOpen,
@@ -18,6 +22,7 @@ export default function ConversationList({
   const [searching, setSearching] = useState(false);
   const [newConvData, setNewConvData] = useState({
     patientName: "",
+    doctorName: "",
     doctorLang: "English",
     patientLang: "French",
   });
@@ -42,7 +47,8 @@ export default function ConversationList({
 
   useEffect(() => {
     loadConversations();
-  }, []);
+    onSelectConversation(null);
+  }, [roomCode]);
 
   useEffect(() => {
     if (searchQuery.trim().length >= 2) {
@@ -58,11 +64,34 @@ export default function ConversationList({
   const loadConversations = async () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
-      const response = await fetch(`${apiUrl}/api/conversations`);
+
+      let url = `${apiUrl}/api/conversations?room_code=${roomCode}`;
+
+      if (tokenData) {
+        url += `&token=${tokenData.token}&signature=${tokenData.signature}`;
+      }
+
+      const response = await fetch(url);
+
+      // Check response
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(
+          "Failed to load conversations:",
+          response.status,
+          errorText,
+        );
+        setConversations([]); // Set empty array on error
+        return;
+      }
+
       const data = await response.json();
-      setConversations(data);
+
+      // Ensure data is array
+      setConversations(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to load conversations:", error);
+      setConversations([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -73,7 +102,7 @@ export default function ConversationList({
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
       const response = await fetch(
-        `${apiUrl}/api/search?q=${encodeURIComponent(searchQuery)}`,
+        `${apiUrl}/api/search?q=${encodeURIComponent(searchQuery)}&room_code=${roomCode}`,
       );
       const data = await response.json();
       setSearchResults(data);
@@ -120,8 +149,16 @@ export default function ConversationList({
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
       const formData = new FormData();
       formData.append("patient_name", newConvData.patientName);
+      formData.append("doctor_name", newConvData.doctorName);
       formData.append("doctor_lang", newConvData.doctorLang);
       formData.append("patient_lang", newConvData.patientLang);
+      formData.append("room_code", roomCode);
+
+      // Add token if available
+      if (tokenData) {
+        formData.append("token", tokenData.token);
+        formData.append("signature", tokenData.signature);
+      }
 
       const response = await fetch(`${apiUrl}/api/conversations`, {
         method: "POST",
@@ -134,12 +171,11 @@ export default function ConversationList({
       }
 
       const newConv = await response.json();
-
       setConversations([newConv, ...conversations]);
       onSelectConversation(newConv);
-
       setNewConvData({
         patientName: "",
+        doctorName: "",
         doctorLang: "English",
         patientLang: "French",
       });
@@ -208,6 +244,11 @@ export default function ConversationList({
             </Button>
           </div>
 
+          {/* Room Manager Component */}
+          <div className="mb-3">
+            <RoomManager roomCode={roomCode} onRoomChange={onRoomChange} />
+          </div>
+
           {/* Search Bar */}
           <div className="relative mb-3">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -225,8 +266,17 @@ export default function ConversationList({
             )}
           </div>
 
+          {/* New Conversation Button */}
           <Button
-            onClick={() => setShowNewDialog(true)}
+            onClick={() => {
+              if (roomCode === "DEMO") {
+                alert(
+                  "Demo room is read-only. Create your own room to add conversations!",
+                );
+                return;
+              }
+              setShowNewDialog(true);
+            }}
             className="w-full text-sm"
             size="sm"
           >
@@ -241,9 +291,29 @@ export default function ConversationList({
             <h3 className="font-semibold mb-3 text-sm">New Conversation</h3>
 
             <div className="space-y-2">
+              {/* Doctor Name Input */}
               <div>
                 <label className="block text-xs font-medium mb-1">
-                  Patient Name
+                  Doctor Name
+                </label>
+                <input
+                  type="text"
+                  value={newConvData.doctorName}
+                  onChange={(e) =>
+                    setNewConvData({
+                      ...newConvData,
+                      doctorName: e.target.value,
+                    })
+                  }
+                  placeholder="Dr. Smith"
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+                />
+              </div>
+
+              {/* Patient Name Input */}
+              <div>
+                <label className="block text-xs font-medium mb-1">
+                  Patient Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -254,11 +324,12 @@ export default function ConversationList({
                       patientName: e.target.value,
                     })
                   }
-                  placeholder="Enter patient name"
+                  placeholder="John Doe"
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
                 />
               </div>
 
+              {/* Doctor's Language */}
               <div>
                 <label className="block text-xs font-medium mb-1">
                   Doctor's Language
@@ -281,6 +352,7 @@ export default function ConversationList({
                 </select>
               </div>
 
+              {/* Patient's Language */}
               <div>
                 <label className="block text-xs font-medium mb-1">
                   Patient's Language
@@ -303,6 +375,7 @@ export default function ConversationList({
                 </select>
               </div>
 
+              {/* Buttons */}
               <div className="flex gap-2 pt-2">
                 <Button
                   onClick={createNewConversation}
@@ -316,6 +389,7 @@ export default function ConversationList({
                     setShowNewDialog(false);
                     setNewConvData({
                       patientName: "",
+                      doctorName: "",
                       doctorLang: "English",
                       patientLang: "French",
                     });
@@ -377,7 +451,9 @@ export default function ConversationList({
                 <div className="p-4 text-center text-gray-500 text-sm">
                   No conversations yet.
                   <br />
-                  Click "New Conversation" to start.
+                  {roomCode === "DEMO"
+                    ? "Create your own room to start adding conversations."
+                    : 'Click "New Conversation" to start.'}
                 </div>
               ) : (
                 <div className="p-2 space-y-2">
@@ -402,6 +478,11 @@ export default function ConversationList({
                           <div className="font-semibold text-sm truncate">
                             {conv.patient_name}
                           </div>
+                          {conv.doctor_name && (
+                            <div className="text-xs text-gray-600 truncate">
+                              Dr. {conv.doctor_name}
+                            </div>
+                          )}
                           <div className="text-xs text-gray-500 truncate">
                             {conv.doctor_lang} ↔ {conv.patient_lang}
                           </div>
@@ -409,14 +490,16 @@ export default function ConversationList({
                             {new Date(conv.created_at).toLocaleDateString()}
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity h-7 w-7 flex-shrink-0"
-                          onClick={(e) => deleteConversation(conv.id, e)}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </Button>
+                        {roomCode !== "DEMO" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity h-7 w-7 flex-shrink-0"
+                            onClick={(e) => deleteConversation(conv.id, e)}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        )}
                       </div>
                     </Card>
                   ))}
